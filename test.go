@@ -13,18 +13,12 @@ import (
 	"strings"
 )
 
-/*
-   Operation operation;
-   BigDecimal operand1;
-   BigDecimal operand2;
-*/
-
-const (
-	MUL = "MUL"
-	DIV = "DIV"
-	SUB = "SUB"
-	SUM = "SUM"
-)
+var operations = map[string]bool{
+	"MUL": true,
+	"DIV": true,
+	"SUB": true,
+	"SUM": true,
+}
 
 type Math struct {
 	Operation string  `json:"operation"`
@@ -32,47 +26,78 @@ type Math struct {
 	Operand2  float64 `json:"operand2"`
 }
 
-func main() {
+type REPLReader struct {
+	r *bufio.Reader
+}
 
-	reader := bufio.NewReader(os.Stdin)
+func NewREPLReader() *REPLReader {
+	return &REPLReader{r: bufio.NewReader(os.Stdin)}
+}
 
-	fmt.Println("Input first operand -> ")
-	operand1, _ := reader.ReadString('\n')
-	operand1 = strings.TrimSpace(operand1)
-	operand1Float, err := strconv.ParseFloat(operand1, 64)
-
-	fmt.Println("Input second operand -> ")
-	operand2, _ := reader.ReadString('\n')
-	operand2 = strings.TrimSpace(operand2)
-	operand2Float, err := strconv.ParseFloat(operand2, 64)
-
-	fmt.Println("Input operation(SUM, SUB, MUL, DIV) -> ")
-	operationWithSpaces, _ := reader.ReadString('\n')
-
-	operation := strings.TrimSpace(operationWithSpaces)
-
-	/*	requestBody, err := json.Marshal(map[string]string{
-		"operation": operation,
-		"operand1":  operand1,
-		"operand2":  operand2,
-	})*/
-	requestBody, err := json.Marshal(Math{operation, operand1Float, operand2Float})
+func (r *REPLReader) printAndRead(msg string) (string, error) {
+	fmt.Println(msg)
+	v, err := r.r.ReadString('\n')
 	if err != nil {
-		log.Fatalln(err)
+		return "", fmt.Errorf("failed to read string from stdin: %w", err)
+	}
+	return strings.TrimSpace(v), nil
+}
+
+func (r *REPLReader) ReadString(msg string) (string, error) {
+	return r.printAndRead(msg)
+}
+
+func (r *REPLReader) ReadFloat(msg string) (float64, error) {
+	str, err := r.printAndRead(msg)
+	if err != nil {
+		return 0, fmt.Errorf("failed to print and read: %w", err)
+	}
+	res, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse data: %w", err)
 	}
 
-	resp, err := http.Post("http://127.0.0.1:8080/calculate", "application/json", bytes.NewBuffer(requestBody))
+	return res, nil
+}
+
+func main() {
+	r := NewREPLReader()
+
+	op1, err := r.ReadFloat("Input first operand -> ")
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed to read op1: %v", err)
+	}
+
+	op2, err := r.ReadFloat("Input second operand -> ")
+	if err != nil {
+		log.Fatalf("failed to read op2: %v", err)
+	}
+
+	op, err := r.ReadString("Input operation(SUM, SUB, MUL, DIV) -> ")
+	if err != nil {
+		log.Fatalf("failed to read operation: %v", err)
+	}
+
+	if _, ok := operations[op]; !ok {
+		log.Fatalf("invalid operation: %v", op)
+	}
+
+	requestBody, err := json.Marshal(Math{op, op1, op2})
+	if err != nil {
+		log.Fatalf("failed to marshal body: %v", err)
+	}
+
+	b := bytes.NewReader(requestBody)
+	resp, err := http.Post("http://127.0.0.1:8080/calculate", "application/json", b)
+	if err != nil {
+		log.Fatalf("failed to do request: %v", err)
 	}
 
 	defer resp.Body.Close()
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed to read resp body: %v", err)
 	}
 
-	log.Println(string(body))
-
+	log.Printf("%s", body)
 }
