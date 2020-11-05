@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package reverse;
+
+import "google/protobuf/timestamp.proto";
+
+service Calculator {
+    rpc Calculate(Request) returns (Response) {}
+}
+
+message Request {
+    string Operation = 1;
+    float Operand1 = 2;
+    float Operand2 = 3;
+}
+
+message Response {
+    fixed64 result = 1;
+    google.protobuf.Timestamp calculationDate = 2;
+    fixed64 calculationTime = 3;
+    string calculationStatus = 4;
+}

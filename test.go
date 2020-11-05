@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -82,22 +81,28 @@ func main() {
 		log.Fatalf("invalid operation: %v", op)
 	}
 
-	requestBody, err := json.Marshal(Math{op, op1, op2})
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+	args := os.Args
+	conn, err := grpc.Dial("127.0.0.1:5300", opts...)
+
 	if err != nil {
-		log.Fatalf("failed to marshal body: %v", err)
+		grpclog.Fatalf("fail to dial: %v", err)
 	}
 
-	b := bytes.NewReader(requestBody)
-	resp, err := http.Post("http://127.0.0.1:8080/calculate", "application/json", b)
+	defer conn.Close()
+
+	client := pb.NewReverseClient(conn)
+	request := &pb.Request{
+		Message: args[1],
+	}
+	response, err := client.Do(context.Background(), request)
+
 	if err != nil {
-		log.Fatalf("failed to do request: %v", err)
+		grpclog.Fatalf("fail to dial: %v", err)
 	}
 
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("failed to read resp body: %v", err)
-	}
+	fmt.Println(response.Message)
 
-	log.Printf("%s", body)
 }
