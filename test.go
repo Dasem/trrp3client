@@ -91,8 +91,8 @@ func main() {
 	client := pb.NewCalculatorClient(conn)
 	request := &pb.Request{
 		Operation: op,
-		Operand1:  op1,
-		Operand2:  op2,
+		Operand1:  float32(op1),
+		Operand2:  float32(op2),
 	}
 
 	ctx := context.Background()
