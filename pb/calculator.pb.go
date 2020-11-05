@@ -4,14 +4,15 @@
 // 	protoc        v3.13.0
 // source: proto/calculator.proto
 
-package reverse
+package pb
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (

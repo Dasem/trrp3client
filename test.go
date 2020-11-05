@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"google.golang.org/grpc"
+
+	"github.com/Dasem/trrp3client/pb"
 )
 
 var operations = map[string]bool{
@@ -17,12 +19,6 @@ var operations = map[string]bool{
 	"DIV": true,
 	"SUB": true,
 	"SUM": true,
-}
-
-type Math struct {
-	Operation string  `json:"operation"`
-	Operand1  float64 `json:"operand1"`
-	Operand2  float64 `json:"operand2"`
 }
 
 type REPLReader struct {
@@ -84,25 +80,26 @@ func main() {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
-	args := os.Args
-	conn, err := grpc.Dial("127.0.0.1:5300", opts...)
 
+	conn, err := grpc.Dial("127.0.0.1:5300", opts...)
 	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
+		log.Fatalf("fail to dial: %v", err)
 	}
 
 	defer conn.Close()
 
-	client := pb.NewReverseClient(conn)
+	client := pb.NewCalculatorClient(conn)
 	request := &pb.Request{
-		Message: args[1],
+		Operation: op,
+		Operand1:  op1,
+		Operand2:  op2,
 	}
-	response, err := client.Do(context.Background(), request)
 
+	ctx := context.Background()
+	resp, err := client.Calculate(ctx, request)
 	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
+		log.Fatalf("failed to invoke calculate: %v", err)
 	}
 
-	fmt.Println(response.Message)
-
+	fmt.Println(resp.String())
 }
