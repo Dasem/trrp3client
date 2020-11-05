@@ -1,6 +1,3 @@
-# github.com/Dasem/trrp3client v0.0.0-20201105155425-52b8ee8d7a1a
-## explicit
-github.com/Dasem/trrp3client/pb
 # github.com/golang/protobuf v1.4.3
 ## explicit
 github.com/golang/protobuf/proto
