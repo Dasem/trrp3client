@@ -10,8 +10,8 @@ service Calculator {
 
 message Request {
     string Operation = 1;
-    float Operand1 = 2;
-    float Operand2 = 3;
+    fixed64 Operand1 = 2;
+    fixed64 Operand2 = 3;
 }
 
 message Response {
