@@ -1,22 +1,36 @@
 syntax = "proto3";
 
-package reverse;
+option java_package="com.trrp.trrp3server";
+option go_package="pb";
+option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
 service Calculator {
-    rpc Calculate(Request) returns (Response) {}
+    rpc Calculate(CalculateMessage) returns (CalculatedMessage) {}
 }
 
-message Request {
+message CalculateMessage {
     string Operation = 1;
-    fixed64 Operand1 = 2;
-    fixed64 Operand2 = 3;
+    double Operand1 = 2;
+    double Operand2 = 3;
 }
 
-message Response {
-    fixed64 result = 1;
+message CalculatedMessage {
+    double result = 1;
     google.protobuf.Timestamp calculationDate = 2;
-    fixed64 calculationTime = 3;
+    double calculationTime = 3;
     string calculationStatus = 4;
+}
+
+enum CalculationStatus {
+    OK = 0;
+    FAILED = 1;
+}
+
+enum Operation {
+    MUL = 0;
+    DIV = 1;
+    SUB = 2;
+    SUM = 3;
 }

@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/Dasem/trrp3client/pb"
+	"awesomeProject/pb"
 )
 
 var operations = map[string]bool{
@@ -89,7 +89,7 @@ func main() {
 	defer conn.Close()
 
 	client := pb.NewCalculatorClient(conn)
-	request := &pb.Request{
+	request := &pb.CalculateMessage{
 		Operation: op,
 		Operand1:  op1,
 		Operand2:  op2,
