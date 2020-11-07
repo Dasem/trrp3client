@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"awesomeProject/pb"
+	"github.com/Dasem/trrp3client/pb"
 )
 
 var operations = map[string]bool{
