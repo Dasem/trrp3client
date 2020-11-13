@@ -8,7 +8,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/golang/protobuf/ptypes"
+
+	"github.com/magiconair/properties"
 	"google.golang.org/grpc"
 
 	"github.com/Dasem/trrp3client/pb"
@@ -55,7 +59,23 @@ func (r *REPLReader) ReadFloat(msg string) (float64, error) {
 	return res, nil
 }
 
+func printResponse(resp *pb.CalculatedMessage) {
+	calcDate, err := ptypes.Timestamp(resp.CalculationDate)
+	if err != nil {
+		log.Fatalf("failed to parse data: %v", err)
+	}
+
+	calculationDate := calcDate.Format(time.RFC1123)
+	status := resp.CalculationStatus
+	calculationTime := resp.CalculationTime
+	result := resp.Result
+
+	fmt.Printf(" calculationDate: %v\n status: %v\n calculationTime: %v sec\n result: %v", calculationDate, status, calculationTime, result)
+}
+
 func main() {
+	p := properties.MustLoadFile("config/default.properties", properties.UTF8)
+
 	r := NewREPLReader()
 
 	op1, err := r.ReadFloat("Input first operand -> ")
@@ -81,7 +101,10 @@ func main() {
 		grpc.WithInsecure(),
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:5300", opts...)
+	grpcIp := p.GetString("grpc_server_ip", "127.0.0.1")
+	grpcPort := p.GetString("grpc_server_port", "5300")
+
+	conn, err := grpc.Dial(grpcIp+":"+grpcPort, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
@@ -101,5 +124,5 @@ func main() {
 		log.Fatalf("failed to invoke calculate: %v", err)
 	}
 
-	fmt.Println(resp.String())
+	printResponse(resp)
 }
